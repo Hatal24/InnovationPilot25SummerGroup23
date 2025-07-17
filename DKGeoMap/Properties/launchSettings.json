@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "DKGeoMap": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
