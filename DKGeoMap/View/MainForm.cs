@@ -11,7 +11,8 @@ namespace DKGeoMap.View
         private readonly MainViewmodel _viewModel = new MainViewmodel();
         private MapPanel _mapPanel;
         private Button _loadButton;
-
+        private Button _toggleOverlayButton;
+        private bool _overlayEnabled = true;
 
         public MainForm()
         {
@@ -30,13 +31,26 @@ namespace DKGeoMap.View
             };
             _loadButton.Click += async (s, e) => await LoadMapAsync();
 
+            _toggleOverlayButton = new Button
+            {
+                Text = "Toggle Overlay",
+                Dock = DockStyle.Top
+            };
+            _toggleOverlayButton.Click += async (s, e) =>
+            {
+                _overlayEnabled = !_overlayEnabled;
+                _viewModel.SetOverlayVisibility(_overlayEnabled);
+                await LoadMapAsync();
+            };
+
             this.Controls.Add(_mapPanel);
+            this.Controls.Add(_toggleOverlayButton);
             this.Controls.Add(_loadButton);
         }
 
         private async Task LoadMapAsync()
         {
-            string wmsUrl = "https://api.dataforsyningen.dk/service?servicename=forvaltning2&service=WMS&version=1.1.1&request=GetMap&token=413317c1dddfc35112064a070b26ddbd&layers=Basis_kort&srs=EPSG:25832&bbox=243259,5935450,994252,6645680&width=4000&height=3200&format=image/png&transparent=FALSE";
+            string wmsUrl = "https://api.dataforsyningen.dk/service?servicename=forvaltning2&service=WMS&version=1.3.0&request=GetMap&token=413317c1dddfc35112064a070b26ddbd&layers=Basis_kort&crs=EPSG:25832&bbox=243259,5935450,994252,6645680&width=4000&height=3200&format=image/png&transparent=FALSE";
             await _viewModel.LoadMapAsync(wmsUrl);
             _mapPanel.SetImage(_viewModel.MapImage);
         }
