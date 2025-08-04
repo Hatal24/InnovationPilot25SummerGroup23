@@ -76,6 +76,20 @@ namespace DKGeoMap.View
             _originalImage = image;
             _zoom = 1.0f;
             UpdateImage();
+
+            // Center the scrollbars on the image
+            CenterScroll();
+        }
+
+        private void CenterScroll()
+        {
+            if (_pictureBox.Image == null) return;
+
+            // Calculate the center position
+            int x = Math.Max(0, (_pictureBox.Width - _scrollPanel.ClientSize.Width) / 2);
+            int y = Math.Max(0, (_pictureBox.Height - _scrollPanel.ClientSize.Height) / 2);
+
+            _scrollPanel.AutoScrollPosition = new Point(x, y);
         }
 
         private void Zoom(float factor)
@@ -85,6 +99,7 @@ namespace DKGeoMap.View
             if (_zoom < 0.1f) _zoom = 0.1f;
             if (_zoom > 10f) _zoom = 10f;
             UpdateImage();
+            CenterScroll();
         }
 
         private void UpdateImage()

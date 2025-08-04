@@ -36,9 +36,10 @@ namespace DKGeoMap.View
 
         private async Task LoadMapAsync()
         {
-            string wmsUrl = "https://api.dataforsyningen.dk/service?servicename=forvaltning2&service=WMS&version=1.1.1&request=GetMap&token=413317c1dddfc35112064a070b26ddbd&layers=Basis_kort&srs=EPSG:25832&bbox=243259,5935450,994252,6645680&width=1000&height=800&format=image/png&transparent=FALSE";
+            string wmsUrl = "https://api.dataforsyningen.dk/service?servicename=forvaltning2&service=WMS&version=1.1.1&request=GetMap&token=413317c1dddfc35112064a070b26ddbd&layers=Basis_kort&srs=EPSG:25832&bbox=243259,5935450,994252,6645680&width=4000&height=3200&format=image/png&transparent=FALSE";
             await _viewModel.LoadMapAsync(wmsUrl);
             _mapPanel.SetImage(_viewModel.MapImage);
         }
     }
 }
+
