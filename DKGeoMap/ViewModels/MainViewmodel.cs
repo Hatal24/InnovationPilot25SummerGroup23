@@ -68,6 +68,14 @@ namespace DKGeoMap.ViewModels
             }
         }
 
+        public async Task<Image> GetLegendImageAsync(string legendUrl)
+        {
+            using var httpClient = new System.Net.Http.HttpClient();
+            var imageBytes = await httpClient.GetByteArrayAsync(legendUrl);
+            using var ms = new System.IO.MemoryStream(imageBytes);
+            return Image.FromStream(ms);
+        }
+
         private Image OverlayImages(Image baseImage, params Image[] overlayImages)
         {
             Bitmap result = new Bitmap(baseImage.Width, baseImage.Height);

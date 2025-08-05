@@ -1,52 +1,56 @@
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using DKGeoMap.ViewModels;
+
 
 namespace DKGeoMap.View
 {
     public class MainForm : Form
     {
         private readonly MainViewmodel _viewModel = new MainViewmodel();
+        private readonly PictureBox legendPictureBox = new PictureBox();
         private MapPanel _mapPanel;
         private MenuStrip _menuStrip;
         private ToolStripMenuItem _optionsMenu;
         private ToolStripMenuItem _loadMapMenuItem;
-        private ToolStripMenuItem _toggleOverlayMenuItem;
         private bool _overlayEnabled = false;
-
+        private readonly string peatLegendUrl = "https://geodata.fvm.dk/geoserver/ows?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image/png&width=20&height=20&layer=Jordbunds_og_terraenforhold:Toerverig_lavbund_2024";
+        private readonly string nitrateLegendUrl = "https://data.geus.dk/arcgis/services/Denmark/Kvaelstofretention/MapServer/WMSServer?request=GetLegendGraphic&version=1.3.0&format=image/png&layer=Kvaelstofretention";
         public MainForm()
         {
             this.Text = "WMS Map Viewer";
-            this.Width = 800;
-            this.Height = 600;
+            this.Width = 1600;
+            this.Height = 800;
+
+            // Ensure overlays are not visible before creating menu items
+            _viewModel.SetOverlayVisibility(false);
 
             // Create menu bar
             _menuStrip = new MenuStrip();
-            _optionsMenu = new ToolStripMenuItem("Options");
+            _optionsMenu = new ToolStripMenuItem("Load Overlay Data Set");
             _loadMapMenuItem = new ToolStripMenuItem("Load Map");
-            /*_toggleOverlayMenuItem = new ToolStripMenuItem("Toggle Overlay")
-            {
-                CheckOnClick = false // We'll manage the check manually
-            };*/
 
 
             foreach (var overlay in _viewModel.Overlays)
             {
                 var overlayMenuItem = MenuItemFactory.CreateOverlayMenuItem(
-                    overlay.Name, overlay.IsVisible,
+                    overlay.Name, overlay.IsVisible, // IsVisible is false here
                     async (item, e) => {
                         item.Checked = !item.Checked;
                         overlay.IsVisible = item.Checked;
                         await ReloadMapWithOverlaysAsync();
+                        UpdateLegendVisibility();
+
+                        legendPictureBox.Image = await GetCombinedLegendsAsync();
                     }
                 );
                 _optionsMenu.DropDownItems.Add(overlayMenuItem);
             }
 
             _optionsMenu.DropDownItems.Add(_loadMapMenuItem);
-            //_optionsMenu.DropDownItems.Add(_toggleOverlayMenuItem);
             _menuStrip.Items.Add(_optionsMenu);
 
             _mapPanel = new MapPanel
@@ -57,6 +61,10 @@ namespace DKGeoMap.View
             this.Controls.Add(_mapPanel);
             this.Controls.Add(_menuStrip);
             this.MainMenuStrip = _menuStrip;
+
+            legendPictureBox.Dock = DockStyle.Right;
+            legendPictureBox.Width = 250; // Adjust width as needed
+            this.Controls.Add(legendPictureBox);
         }
 
         private async Task LoadMapAsync()
@@ -78,6 +86,48 @@ namespace DKGeoMap.View
         {
             base.OnLoad(e);
             await LoadMapAsync();
+            legendPictureBox.Image = await GetCombinedLegendsAsync();
+            UpdateLegendVisibility();
+        }
+
+
+        private void UpdateLegendVisibility()
+        {
+            legendPictureBox.Visible = _viewModel.Overlays.Any(o => o.IsVisible);
+        }
+
+        private async Task<Image> GetCombinedLegendsAsync()
+        {
+            var legends = new System.Collections.Generic.List<Image>();
+
+            var toerverigOverlay = _viewModel.Overlays.Find(o => o.Name == "Toerverig lavbund 2024");
+            if (toerverigOverlay != null && toerverigOverlay.IsVisible)
+                legends.Add(await _viewModel.GetLegendImageAsync(peatLegendUrl));
+
+            var nitrateOverlay = _viewModel.Overlays.Find(o => o.Name == "Kvaelstofretention");
+            if (nitrateOverlay != null && nitrateOverlay.IsVisible)
+                legends.Add(await _viewModel.GetLegendImageAsync(nitrateLegendUrl));
+
+            if (legends.Count == 0)
+                return null;
+            if (legends.Count == 1)
+                return legends[0];
+
+            // Stack images vertically
+            int width = legends.Max(img => img.Width);
+            int height = legends.Sum(img => img.Height);
+
+            var combined = new Bitmap(width, height);
+            using (var g = Graphics.FromImage(combined))
+            {
+                int y = 0;
+                foreach (var img in legends)
+                {
+                    g.DrawImage(img, 0, y, img.Width, img.Height);
+                    y += img.Height;
+                }
+            }
+            return combined;
         }
     }
 }
