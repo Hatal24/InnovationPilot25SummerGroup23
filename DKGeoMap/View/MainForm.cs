@@ -29,8 +29,6 @@ namespace DKGeoMap.View
             // Create menu bar
             _menuStrip = new MenuStrip();
             _optionsMenu = new ToolStripMenuItem("Load Overlay Data Set");
-            _loadMapMenuItem = new ToolStripMenuItem("Load Map");
-
 
             foreach (var overlay in _viewModel.Overlays)
             {
@@ -48,7 +46,6 @@ namespace DKGeoMap.View
                 _optionsMenu.DropDownItems.Add(overlayMenuItem);
             }
 
-            _optionsMenu.DropDownItems.Add(_loadMapMenuItem);
             _menuStrip.Items.Add(_optionsMenu);
 
             _mapPanel = new MapPanel
