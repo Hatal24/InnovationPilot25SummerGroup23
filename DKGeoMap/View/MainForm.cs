@@ -16,9 +16,6 @@ namespace DKGeoMap.View
         private MenuStrip _menuStrip;
         private ToolStripMenuItem _optionsMenu;
         private ToolStripMenuItem _loadMapMenuItem;
-        private bool _overlayEnabled = false;
-        private readonly string peatLegendUrl = "https://geodata.fvm.dk/geoserver/ows?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image/png&width=20&height=20&layer=Jordbunds_og_terraenforhold:Toerverig_lavbund_2024";
-        private readonly string nitrateLegendUrl = "https://data.geus.dk/arcgis/services/Denmark/Kvaelstofretention/MapServer/WMSServer?request=GetLegendGraphic&version=1.3.0&format=image/png&layer=Kvaelstofretention";
         private readonly LegendFactory _legendFactory = new LegendFactory();
         public MainForm()
         {

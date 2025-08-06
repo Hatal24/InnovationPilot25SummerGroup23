@@ -13,7 +13,7 @@ namespace DKGeoMap.ViewModels
 
         public MainViewmodel()
         {
-            // Existing overlay
+            // Peat overlay (compatible with basemap)
             Overlays.Add(new OverlayModel(
                 "Tørverig lavbund 2024",
                 "https://geodata.fvm.dk/geoserver/ows?service=WMS&version=1.3.0&request=GetMap&layers=Jordbunds_og_terraenforhold:Toerverig_lavbund_2024&bbox=243259,5935450,994252,6645680&width=3000&height=2400&crs=EPSG:25832&format=image/png&transparent=TRUE"
@@ -92,7 +92,7 @@ namespace DKGeoMap.ViewModels
                 for (int i = 0; i < overlayImages.Length; i++)
                 {
                     var overlay = overlayImages[i];
-                    // Apply 50% opacity only to the nitrate retention overlay (assumed to be the second overlay)
+                    // Apply 30% opacity only to the nitrate retention overlay (assumed to be the second overlay)
                     if (i == 1) // index 1: nitrate retention overlay
                     {
                         var colorMatrix = new System.Drawing.Imaging.ColorMatrix
