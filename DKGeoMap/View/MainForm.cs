@@ -19,6 +19,7 @@ namespace DKGeoMap.View
         private bool _overlayEnabled = false;
         private readonly string peatLegendUrl = "https://geodata.fvm.dk/geoserver/ows?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image/png&width=20&height=20&layer=Jordbunds_og_terraenforhold:Toerverig_lavbund_2024";
         private readonly string nitrateLegendUrl = "https://data.geus.dk/arcgis/services/Denmark/Kvaelstofretention/MapServer/WMSServer?request=GetLegendGraphic&version=1.3.0&format=image/png&layer=Kvaelstofretention";
+        private readonly LegendFactory _legendFactory = new LegendFactory();
         public MainForm()
         {
             this.Text = "WMS Map Viewer";
@@ -44,7 +45,7 @@ namespace DKGeoMap.View
                         await ReloadMapWithOverlaysAsync();
                         UpdateLegendVisibility();
 
-                        legendPictureBox.Image = await GetCombinedLegendsAsync();
+                        legendPictureBox.Image = await _legendFactory.GetCombinedLegendsAsync(_viewModel);
                     }
                 );
                 _optionsMenu.DropDownItems.Add(overlayMenuItem);
@@ -86,7 +87,7 @@ namespace DKGeoMap.View
         {
             base.OnLoad(e);
             await LoadMapAsync();
-            legendPictureBox.Image = await GetCombinedLegendsAsync();
+            legendPictureBox.Image = await _legendFactory.GetCombinedLegendsAsync(_viewModel);
             UpdateLegendVisibility();
         }
 
@@ -94,40 +95,6 @@ namespace DKGeoMap.View
         private void UpdateLegendVisibility()
         {
             legendPictureBox.Visible = _viewModel.Overlays.Any(o => o.IsVisible);
-        }
-
-        private async Task<Image> GetCombinedLegendsAsync()
-        {
-            var legends = new System.Collections.Generic.List<Image>();
-
-            var toerverigOverlay = _viewModel.Overlays.Find(o => o.Name == "Toerverig lavbund 2024");
-            if (toerverigOverlay != null && toerverigOverlay.IsVisible)
-                legends.Add(await _viewModel.GetLegendImageAsync(peatLegendUrl));
-
-            var nitrateOverlay = _viewModel.Overlays.Find(o => o.Name == "Kvaelstofretention");
-            if (nitrateOverlay != null && nitrateOverlay.IsVisible)
-                legends.Add(await _viewModel.GetLegendImageAsync(nitrateLegendUrl));
-
-            if (legends.Count == 0)
-                return null;
-            if (legends.Count == 1)
-                return legends[0];
-
-            // Stack images vertically
-            int width = legends.Max(img => img.Width);
-            int height = legends.Sum(img => img.Height);
-
-            var combined = new Bitmap(width, height);
-            using (var g = Graphics.FromImage(combined))
-            {
-                int y = 0;
-                foreach (var img in legends)
-                {
-                    g.DrawImage(img, 0, y, img.Width, img.Height);
-                    y += img.Height;
-                }
-            }
-            return combined;
         }
     }
 }
