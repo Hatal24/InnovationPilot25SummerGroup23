@@ -26,14 +26,14 @@ namespace DKGeoMap.ViewModels
         {
             MapImage = await GetMapImageAsync(baseMapUrl);
 
-            var visibleOverlays = new List<Image>();
+            var visibleOverlays = new List<OverlayModel>();
             foreach (var overlay in Overlays)
             {
                 if (overlay.IsVisible)
                 {
                     overlay.OverlayImage = await GetMapImageAsync(overlay.WmsUrl);
                     if (overlay.OverlayImage != null)
-                        visibleOverlays.Add(overlay.OverlayImage);
+                        visibleOverlays.Add(overlay);
                 }
             }
 
@@ -66,37 +66,43 @@ namespace DKGeoMap.ViewModels
             return Image.FromStream(ms);
         }
 
-        private Image OverlayImages(Image baseImage, params Image[] overlayImages)
+        private Image OverlayImages(Image baseImage, params OverlayModel[] overlays)
         {
             Bitmap result = new Bitmap(baseImage.Width, baseImage.Height);
             using (Graphics g = Graphics.FromImage(result))
             {
                 g.DrawImage(baseImage, 0, 0);
 
-                for (int i = 0; i < overlayImages.Length; i++)
+                foreach (var overlay in overlays)
                 {
-                    var overlay = overlayImages[i];
-                    // Apply 30% opacity only to the nitrate retention overlay (assumed to be the second overlay)
-                    if (i == 1) // index 1: nitrate retention overlay
+                    if (overlay.OverlayImage == null) continue;
+
+                    float opacity = 1.0f;
+                    if (overlay.Name == "Kvælstofretention" && overlays.Length > 1)
+                        opacity = 0.3f;
+                    else if (overlay.Name == "Jordartskort uden hav" && overlays.Length > 1)
+                        opacity = 0.5f;
+
+                    if (opacity < 1.0f)
                     {
                         var colorMatrix = new System.Drawing.Imaging.ColorMatrix
                         {
-                            Matrix33 = 0.3f // 50% opacity
+                            Matrix33 = opacity
                         };
                         var imageAttributes = new System.Drawing.Imaging.ImageAttributes();
                         imageAttributes.SetColorMatrix(colorMatrix, System.Drawing.Imaging.ColorMatrixFlag.Default, System.Drawing.Imaging.ColorAdjustType.Bitmap);
 
                         g.DrawImage(
-                            overlay,
+                            overlay.OverlayImage,
                             new Rectangle(0, 0, result.Width, result.Height),
-                            0, 0, overlay.Width, overlay.Height,
+                            0, 0, overlay.OverlayImage.Width, overlay.OverlayImage.Height,
                             GraphicsUnit.Pixel,
                             imageAttributes
                         );
                     }
                     else
                     {
-                        g.DrawImage(overlay, 0, 0);
+                        g.DrawImage(overlay.OverlayImage, 0, 0);
                     }
                 }
             }
