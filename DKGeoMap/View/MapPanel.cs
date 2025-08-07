@@ -13,6 +13,10 @@ namespace DKGeoMap.View
         private float _zoom = 1.0f;
         private Image _originalImage;
 
+        private Point _mouseDownPosition;
+        private Point _scrollOnMouseDown;
+        private bool _isPanning = false;
+
         public MapPanel()
         {
             // Set up scrollable panel
@@ -25,10 +29,10 @@ namespace DKGeoMap.View
             // Set up picture box
             _pictureBox = new PictureBox
             {
-                SizeMode = PictureBoxSizeMode.Zoom,
-                Location = new Point(0, 0)
+                SizeMode = PictureBoxSizeMode.AutoSize
             };
             _scrollPanel.Controls.Add(_pictureBox);
+            this.Controls.Add(_scrollPanel);
 
             // Set up zoom buttons (bottom right, absolute positioning)
             _zoomInButton = new Button
@@ -55,6 +59,12 @@ namespace DKGeoMap.View
             // Position buttons in bottom right on resize
             this.Resize += (s, e) => PositionButtons();
             PositionButtons();
+
+            // Enable panning
+            _pictureBox.MouseDown += PictureBox_MouseDown;
+            _pictureBox.MouseMove += PictureBox_MouseMove;
+            _pictureBox.MouseUp += PictureBox_MouseUp;
+            _pictureBox.Cursor = Cursors.Hand;
         }
 
         private void PositionButtons()
@@ -109,6 +119,42 @@ namespace DKGeoMap.View
             int newHeight = (int)(_originalImage.Height * _zoom);
             _pictureBox.Image = new Bitmap(_originalImage, new Size(newWidth, newHeight));
             _pictureBox.Size = new Size(newWidth, newHeight);
+        }
+
+        private void PictureBox_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                _isPanning = true;
+                _mouseDownPosition = e.Location;
+                _scrollOnMouseDown = new Point(
+                    -_scrollPanel.AutoScrollPosition.X,
+                    -_scrollPanel.AutoScrollPosition.Y
+                );
+                _pictureBox.Cursor = Cursors.SizeAll;
+            }
+        }
+
+        private void PictureBox_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (_isPanning)
+            {
+                int dx = e.Location.X - _mouseDownPosition.X;
+                int dy = e.Location.Y - _mouseDownPosition.Y;
+                _scrollPanel.AutoScrollPosition = new Point(
+                    _scrollOnMouseDown.X - dx,
+                    _scrollOnMouseDown.Y - dy
+                );
+            }
+        }
+
+        private void PictureBox_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                _isPanning = false;
+                _pictureBox.Cursor = Cursors.Hand;
+            }
         }
     }
 }
