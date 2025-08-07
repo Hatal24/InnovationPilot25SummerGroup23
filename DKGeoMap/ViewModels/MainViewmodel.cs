@@ -9,27 +9,11 @@ namespace DKGeoMap.ViewModels
     public class MainViewmodel
     {
         public Image MapImage { get; private set; }
-        public List<OverlayModel> Overlays { get; } = new List<OverlayModel>();
+        public List<OverlayModel> Overlays { get; }
 
         public MainViewmodel()
         {
-            // Peat overlay (compatible with basemap)
-            Overlays.Add(new OverlayModel(
-                "Tørverig lavbund 2024",
-                "https://geodata.fvm.dk/geoserver/ows?service=WMS&version=1.3.0&request=GetMap&layers=Jordbunds_og_terraenforhold:Toerverig_lavbund_2024&bbox=243259,5935450,994252,6645680&width=3000&height=2400&crs=EPSG:25832&format=image/png&transparent=TRUE"
-            ));
-
-            // Nitrate retention overlay (compatible with basemap)
-            Overlays.Add(new OverlayModel(
-                "Kvælstofretention",
-                "https://data.geus.dk/arcgis/services/Denmark/Kvaelstofretention/MapServer/WMSServer?service=WMS&version=1.3.0&request=GetMap&layers=Kvaelstofretention&styles=&crs=EPSG:25832&bbox=243259,5935450,994252,6645680&width=3000&height=2400&format=image/png&transparent=TRUE"
-            ));
-
-            //Municipal boundaries overlay
-            Overlays.Add(new OverlayModel(
-                "Kommunegrænser",
-                "https://services.datafordeler.dk/MATRIKLEN2/MatGaeldendeOgForeloebigWMS/1.0.0/WMS?username=UFZLDDPIJS&password=DAIdatafordel123&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=Matrikelkommune_Gaeldende&STYLES=Matrikelkommune_gaeldende_outline&CRS=EPSG:25832&BBOX=243259,5935450,994252,6645680&WIDTH=3000&HEIGHT=2400&FORMAT=image/png&TRANSPARENT=TRUE"
-            ));
+            Overlays = OverlayFactory.CreateDefaultOverlays();
         }
 
         public void SetOverlayVisibility(bool visible)

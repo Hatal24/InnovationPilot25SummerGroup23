@@ -12,11 +12,12 @@ namespace DKGeoMap.View
     {
         private readonly MainViewmodel _viewModel = new MainViewmodel();
         private readonly PictureBox legendPictureBox = new PictureBox();
+        private readonly Panel legendScrollPanel = new Panel(); // Add this line
         private MapPanel _mapPanel;
         private MenuStrip _menuStrip;
         private ToolStripMenuItem _optionsMenu;
-        private ToolStripMenuItem _loadMapMenuItem;
         private readonly LegendFactory _legendFactory = new LegendFactory();
+
         public MainForm()
         {
             this.Text = "WMS Map Viewer";
@@ -57,9 +58,13 @@ namespace DKGeoMap.View
             this.Controls.Add(_menuStrip);
             this.MainMenuStrip = _menuStrip;
 
-            legendPictureBox.Dock = DockStyle.Right;
-            legendPictureBox.Width = 250; // Adjust width as needed
-            this.Controls.Add(legendPictureBox);
+            legendPictureBox.SizeMode = PictureBoxSizeMode.AutoSize;
+            legendScrollPanel.Dock = DockStyle.Right;
+            legendScrollPanel.Width = 250;
+            legendScrollPanel.AutoScroll = true;
+            legendScrollPanel.Controls.Add(legendPictureBox);
+            this.Controls.Add(legendScrollPanel);
+
         }
 
         private async Task LoadMapAsync()
