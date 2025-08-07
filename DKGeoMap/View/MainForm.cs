@@ -12,11 +12,16 @@ namespace DKGeoMap.View
     {
         private readonly MainViewmodel _viewModel = new MainViewmodel();
         private readonly PictureBox legendPictureBox = new PictureBox();
-        private readonly Panel legendScrollPanel = new Panel(); // Add this line
+        private readonly Panel legendScrollPanel = new Panel();
         private MapPanel _mapPanel;
         private MenuStrip _menuStrip;
         private ToolStripMenuItem _optionsMenu;
         private readonly LegendFactory _legendFactory = new LegendFactory();
+
+        // --- Loading overlay controls ---
+        private readonly Panel loadingPanel = new Panel();
+        private readonly Label loadingLabel = new Label();
+        // --- End loading overlay controls ---
 
         public MainForm()
         {
@@ -24,23 +29,20 @@ namespace DKGeoMap.View
             this.Width = 1600;
             this.Height = 800;
 
-            // Ensure overlays are not visible before creating menu items
             _viewModel.SetOverlayVisibility(false);
 
-            // Create menu bar
             _menuStrip = new MenuStrip();
             _optionsMenu = new ToolStripMenuItem("Load Overlay Data Set");
 
             foreach (var overlay in _viewModel.Overlays)
             {
                 var overlayMenuItem = MenuItemFactory.CreateOverlayMenuItem(
-                    overlay.Name, overlay.IsVisible, // IsVisible is false here
+                    overlay.Name, overlay.IsVisible,
                     async (item, e) => {
                         item.Checked = !item.Checked;
                         overlay.IsVisible = item.Checked;
-                        await ReloadMapWithOverlaysAsync();
+                        await ShowLoadingWhileAsync(ReloadMapWithOverlaysAsync);
                         UpdateLegendVisibility();
-
                         legendPictureBox.Image = await _legendFactory.GetCombinedLegendsAsync(_viewModel);
                     }
                 );
@@ -65,14 +67,40 @@ namespace DKGeoMap.View
             legendScrollPanel.Controls.Add(legendPictureBox);
             this.Controls.Add(legendScrollPanel);
 
+            // --- Setup loading overlay ---
+            loadingPanel.Dock = DockStyle.Fill;
+            loadingPanel.BackColor = Color.FromArgb(128, Color.LightGray);
+            loadingPanel.Visible = false;
+            loadingPanel.BringToFront();
+
+            loadingLabel.Text = "Loading...";
+            loadingLabel.Font = new Font(FontFamily.GenericSansSerif, 18, FontStyle.Bold);
+            loadingLabel.AutoSize = true;
+            loadingLabel.BackColor = Color.Transparent;
+            loadingLabel.ForeColor = Color.Black;
+            loadingLabel.Parent = loadingPanel;
+            loadingPanel.Controls.Add(loadingLabel);
+
+            // Center the label when the panel is resized
+            loadingPanel.Resize += (s, e) =>
+            {
+                loadingLabel.Left = (loadingPanel.Width - loadingLabel.Width) / 2;
+                loadingLabel.Top = (loadingPanel.Height - loadingLabel.Height) / 2;
+            };
+
+            this.Controls.Add(loadingPanel);
+            // --- End setup loading overlay ---
         }
 
         private async Task LoadMapAsync()
         {
             string wmsUrl = "https://api.dataforsyningen.dk/service?servicename=forvaltning2&service=WMS&version=1.3.0&request=GetMap&token=413317c1dddfc35112064a070b26ddbd&layers=Basis_kort&crs=EPSG:25832&bbox=243259,5935450,994252,6645680&width=3000&height=2400&format=image/png&transparent=FALSE";
             _viewModel.SetOverlayVisibility(false);
-            await _viewModel.LoadMapAsync(wmsUrl);
-            _mapPanel.SetImage(_viewModel.MapImage);
+            await ShowLoadingWhileAsync(async () =>
+            {
+                await _viewModel.LoadMapAsync(wmsUrl);
+                _mapPanel.SetImage(_viewModel.MapImage);
+            });
         }
 
         private async Task ReloadMapWithOverlaysAsync()
@@ -90,10 +118,25 @@ namespace DKGeoMap.View
             UpdateLegendVisibility();
         }
 
-
         private void UpdateLegendVisibility()
         {
             legendPictureBox.Visible = _viewModel.Overlays.Any(o => o.IsVisible);
+        }
+
+        // --- Helper to show loading overlay during async operation ---
+        private async Task ShowLoadingWhileAsync(Func<Task> asyncAction)
+        {
+            try
+            {
+                loadingPanel.Visible = true;
+                loadingPanel.BringToFront();
+                await Task.Yield(); // Ensure UI updates
+                await asyncAction();
+            }
+            finally
+            {
+                loadingPanel.Visible = false;
+            }
         }
     }
 }
