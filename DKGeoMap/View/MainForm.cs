@@ -16,6 +16,7 @@ namespace DKGeoMap.View
         private MapPanel _mapPanel;
         private MenuStrip _menuStrip;
         private ToolStripMenuItem _optionsMenu;
+        private ToolStripMenuItem _resetMenu;
         private readonly LegendFactory _legendFactory = new LegendFactory();
 
         // --- Loading overlay controls ---
@@ -33,6 +34,14 @@ namespace DKGeoMap.View
 
             _menuStrip = new MenuStrip();
             _optionsMenu = new ToolStripMenuItem("Load Overlay Data Set");
+            _resetMenu = new ToolStripMenuItem("Reset Map");
+
+            _resetMenu.Click += async (s, e) => {
+                _viewModel.SetOverlayVisibility(false);
+                await ShowLoadingWhileAsync(LoadMapAsync);
+                UpdateLegendVisibility();
+                legendPictureBox.Image = await _legendFactory.GetCombinedLegendsAsync(_viewModel);
+            };
 
             foreach (var overlay in _viewModel.Overlays)
             {
@@ -50,6 +59,7 @@ namespace DKGeoMap.View
             }
 
             _menuStrip.Items.Add(_optionsMenu);
+            _menuStrip.Items.Add(_resetMenu);
 
             _mapPanel = new MapPanel
             {
