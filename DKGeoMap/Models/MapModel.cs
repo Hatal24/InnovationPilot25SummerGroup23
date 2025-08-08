@@ -17,5 +17,13 @@ namespace DKGeoMap.Models
             using var ms = new System.IO.MemoryStream(imageBytes);
             return Image.FromStream(ms);
         }
+
+        public async Task<Image> GetLegendImageAsync(string legendUrl)
+        {
+            using var httpClient = new HttpClient();
+            var imageBytes = await httpClient.GetByteArrayAsync(legendUrl);
+            using var ms = new System.IO.MemoryStream(imageBytes);
+            return Image.FromStream(ms);
+        }
     }
 }

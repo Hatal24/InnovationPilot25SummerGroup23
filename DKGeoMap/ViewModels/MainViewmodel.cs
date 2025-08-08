@@ -10,6 +10,7 @@ namespace DKGeoMap.ViewModels
     {
         public Image MapImage { get; private set; }
         public List<OverlayModel> Overlays { get; }
+        private readonly MapModel _mapModel = new MapModel();
 
         public MainViewmodel()
         {
@@ -24,14 +25,14 @@ namespace DKGeoMap.ViewModels
 
         public async Task LoadMapAsync(string baseMapUrl)
         {
-            MapImage = await GetMapImageAsync(baseMapUrl);
+            MapImage = await _mapModel.GetMapImageAsync(baseMapUrl);
 
             var visibleOverlays = new List<OverlayModel>();
             foreach (var overlay in Overlays)
             {
                 if (overlay.IsVisible)
                 {
-                    overlay.OverlayImage = await GetMapImageAsync(overlay.WmsUrl);
+                    overlay.OverlayImage = await _mapModel.GetMapImageAsync(overlay.WmsUrl);
                     if (overlay.OverlayImage != null)
                         visibleOverlays.Add(overlay);
                 }
@@ -41,29 +42,9 @@ namespace DKGeoMap.ViewModels
                 MapImage = OverlayImages(MapImage, visibleOverlays.ToArray());
         }
 
-        private async Task<Image> GetMapImageAsync(string wmsUrl)
-        {
-            using var httpClient = new System.Net.Http.HttpClient();
-            try
-            {
-                var imageBytes = await httpClient.GetByteArrayAsync(wmsUrl);
-                using var ms = new System.IO.MemoryStream(imageBytes);
-                return Image.FromStream(ms);
-            }
-            catch (Exception ex)
-            {
-                // Log or handle the error as needed
-                System.Diagnostics.Debug.WriteLine($"Failed to load image from {wmsUrl}: {ex.Message}");
-                return null;
-            }
-        }
-
         public async Task<Image> GetLegendImageAsync(string legendUrl)
         {
-            using var httpClient = new System.Net.Http.HttpClient();
-            var imageBytes = await httpClient.GetByteArrayAsync(legendUrl);
-            using var ms = new System.IO.MemoryStream(imageBytes);
-            return Image.FromStream(ms);
+            return await _mapModel.GetLegendImageAsync(legendUrl);
         }
 
         private Image OverlayImages(Image baseImage, params OverlayModel[] overlays)
