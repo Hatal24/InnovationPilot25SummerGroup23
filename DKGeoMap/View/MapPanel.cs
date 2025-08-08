@@ -126,7 +126,8 @@ namespace DKGeoMap.View
             if (e.Button == MouseButtons.Left)
             {
                 _isPanning = true;
-                _mouseDownPosition = e.Location;
+                // Use Control.MousePosition for global mouse position
+                _mouseDownPosition = Cursor.Position;
                 _scrollOnMouseDown = new Point(
                     -_scrollPanel.AutoScrollPosition.X,
                     -_scrollPanel.AutoScrollPosition.Y
@@ -139,8 +140,10 @@ namespace DKGeoMap.View
         {
             if (_isPanning)
             {
-                int dx = e.Location.X - _mouseDownPosition.X;
-                int dy = e.Location.Y - _mouseDownPosition.Y;
+                // Use global mouse position to avoid twitching
+                Point mouseNow = Cursor.Position;
+                int dx = mouseNow.X - _mouseDownPosition.X;
+                int dy = mouseNow.Y - _mouseDownPosition.Y;
                 _scrollPanel.AutoScrollPosition = new Point(
                     _scrollOnMouseDown.X - dx,
                     _scrollOnMouseDown.Y - dy
